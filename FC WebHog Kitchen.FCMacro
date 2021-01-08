@@ -1,0 +1,151 @@
+# -*- coding: utf-8 -*-
+#
+# Kitchen Macro runs with Freecad 0.19
+#
+# Author      : L. Hogerhuis - HogerhuisWebdesign.nl
+# Script name : FC WebHog Kitchen.FCMacro
+# Version     : v1.0
+# Date        : 01-2021
+#
+# Description : This macro creates a kitchen from a description file
+#             : - create a kitchen with and without a bent
+#             : - position a handle on top, bottum. Center, left or right side
+#             :   choose from: top bottum topleft topright bottumleft bottumright
+
+import Part, math
+from FreeCAD import Vector
+
+App.Console.PrintMessage("FC WebHog Kitchen\n")
+# Get location of user macros
+p       = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Macro")
+path    = p.GetString("MacroPath")
+dataset = path + "/FC WebHog Kitchen.dat"  
+file    = open(dataset,"r")
+
+# start placement coordinates
+placementX    = 0
+placementY    = 0
+placementZ    = 0
+
+lineNr     = 0   		# line nummer of input file, used to report errors
+shapeCount = 0			# Statistics: Number of shapes created
+moveInX    = "true"  	# initial value for direction to place adjacent block.The "corner" cmd switches this to false
+firstAfterCorner = "true"	# needed to do some modification on placement of first block after the corner
+
+# Simple handle shape, a small bar (in mm)
+handleWidth   = 200
+handleDepth   = 20
+handleHeight  = 20
+handlePosDist = 50		# Distance from the upper or lower edge to place the handle (in mm)
+
+for line in file:
+  lineNr = lineNr + 1
+  line   = line.strip().lower()         # remove spaces on left and right and strings to lowercase
+
+  if len(line) > 0:
+    if line[0] != "#":
+      line = line.split("#")[0]      	# remove everything after the "#"
+      line = " ".join(line.split())  	# remove double spaces
+
+      if line != "next" and line != "corner":
+        dimensions = line.split(" ")
+        if len(dimensions) < 3:
+          print("Syntax error in line: "+str(lineNr)+" Line: '"+line+"' #elements="+str(len(dimensions)))
+        else:
+          width  = int(dimensions[0])  
+          depth  = int(dimensions[1])  
+          height = int(dimensions[2])
+
+          if len(dimensions) >= 4:
+            extra = dimensions[3]
+          else:
+            extra = ""
+         
+          if extra != "blank":  # create a box, otherwise it is a filler to adjust the height for another part of the kitchen
+            if moveInX == "true":
+              box   = Part.makeBox(width,depth,height)
+              start = FreeCAD.Vector(placementX, placementY-depth,placementZ)
+            else:
+              box   = Part.makeBox(depth,width,height)
+              start = FreeCAD.Vector(placementX-depth, placementY-width,placementZ)
+                      
+            box.Placement.Base = start
+            Part.show(box)
+            shapeCount = shapeCount + 1
+
+            if extra == "handle":   	# make a handle
+              if len(dimensions) == 5:	# check for the position of the handle
+                handlePos = dimensions[4]
+              else:
+                handlePos = "top"		# default position
+
+              if handlePos == "top":
+                handleX  = width/2-handleWidth/2
+                handleX2 = handleX
+                handleY  = -depth-handleDepth
+                handleZ  = height - handlePosDist
+              elif handlePos == "bottum":
+                handleX  = width/2-handleWidth/2
+                handleX2 = handleX2
+                handleY  = -depth-handleDepth
+                handleZ  = handlePosDist
+              elif handlePos == "topleft":
+                handleX  = width/2-handleWidth*1
+                handleX2 = width/2-handleWidth*0.0
+                handleY  = -depth-handleDepth
+                handleZ  = height - handlePosDist
+              elif handlePos == "topright":
+                handleX  = width/2-handleWidth*0.0
+                handleX2 = width/2-handleWidth*1
+                handleY  = -depth-handleDepth
+                handleZ  = height - handlePosDist
+              elif handlePos == "bottumleft":
+                handleX  = width/2-handleWidth*1
+                handleX2 = width/2-handleWidth*0.0
+                handleY  = -depth-handleDepth
+                handleZ  = handlePosDist
+              elif handlePos == "bottumright":
+                handleX  = width/2-handleWidth*0.0
+                handleX2 = width/2-handleWidth*1
+                handleY  = -depth-handleDepth
+                handleZ  = handlePosDist
+              else: # assume top center position
+                handleX  = width/2-handleWidth/2
+                handleX2 = handleX
+                handleY  = -depth-handleDepth
+                handleZ  = height - handlePosDist
+                App.Console.PrintMessage("Error in line "+str(lineNr)+": Bad handle position: "+handlePos+"\n")
+
+              if moveInX == "true":
+                box   = Part.makeBox(handleWidth,handleDepth,handleHeight)
+                start = FreeCAD.Vector(placementX+handleX, placementY+handleY, placementZ+handleZ)
+              else:
+                box   = Part.makeBox(handleDepth,handleWidth,handleHeight)
+                start = FreeCAD.Vector(placementX-2*depth-handleY-2*handleDepth, placementY-width+handleX2, placementZ+handleZ)
+                  
+              box.Placement.Base = start
+              Part.show(box)
+              shapeCount = shapeCount + 1
+              
+          placementZ = placementZ+height    # adjust placement placementZ point
+
+      else:
+        placementZ = 0
+        if line == "next":
+
+          if moveInX == "true":
+            placementX = placementX+width # adjust start point
+          else:
+            placementY = placementY-width
+        else: # corner cmd with implicit next cmd
+
+          moveInX = "false"
+          
+          if firstAfterCorner == "true":
+            placementX = placementX+width # adjust start point
+            placementY = placementY-depth
+            firstAfterCorner="false"
+
+file.close()
+App.Console.PrintMessage("Number of shapes created: "+str(shapeCount)+"\n")
+

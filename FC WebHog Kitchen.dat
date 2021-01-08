@@ -1,0 +1,89 @@
+# Kitchen definition script
+#
+# Define the cabinets clockwise (right to left) and bottum up
+#
+
+# Usage:
+# =====
+# next   				: start with next (to the right) part of the kitchen bottum up
+#
+# corner 				: 90 degree bent to the right. Can be used one time
+#
+# xxx yyy zzz <handle> <position>
+#        				: xxx the width, yyy the depth and zzz the height of the cabinet in mm
+#        				: handle <position> create a handle on the cabinet
+#        				: position must be: top bottum topleft topright bottumleft bottumright
+#
+# xxx yyy zzz blank		: acts like a vertical filler, only the zzz value is relevant
+
+# Width Depth Height (in mm)
+#
+600 600 160    			# skirting board
+600 640 321 handle top
+600 640 256 handle top
+600 640 127 handle top
+600 655 60				# work surface
+next
+
+600 600 160    			# skirting board
+600 640 704 handle topright
+600 655 60				# work surface
+600 655 846 blank
+600 350 350 handle bottum
+next
+
+600 600 160    			# skirting board
+600 640 704 handle topleft
+600 655 60				# work surface
+600 655 846 blank
+600 350 350 handle bottum
+next
+
+600 600 160    			# skirting board
+600 640 352 handle top
+600 640 352 handle top
+600 655 60				# work surface
+next
+
+600 600 160    			# skirting board
+600 640 704 handle top
+600 655 60
+next
+
+50 600 160    			# skirting board
+50 640 705
+50 655 60				# work surface
+next
+
+600 600 160    			# skirting board 
+600 640 705 			# corner cabinet
+600 655 1256
+corner
+
+20 550 160
+20 600 1960 
+next
+
+20 600 2120
+next
+
+600 550 160    			# skirting board
+600 600 1060 handle topright
+600 600 900  handle bottumright
+next
+
+600 550 160    			# skirting board
+600 600 320 handle top
+600 600 600
+600 600 460 handle bottum
+600 600 580 handle bottumleft
+next
+
+600 550 160    			# skirting board
+600 600 1060 handle topleft
+600 600 900 handle bottumleft
+next
+
+50 600 2120
+next 
+
